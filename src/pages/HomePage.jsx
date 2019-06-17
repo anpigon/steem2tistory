@@ -69,13 +69,37 @@ const REDIRECT_URI = process.env.REACT_APP_REDIRECT_URI;
 const HomePage = () => {
   const classes = useStyles();
 
+  const [isLogined, setIsLogined] = React.useState(false);
+
   // 로그인
   const login = React.useCallback(() => {
     const url = `https://www.tistory.com/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=token`;
     // console.log(url);
     window.open(url, "login_popup", "width=500,height=500");
   });
+  const logout = React.useCallback(() => {
+    window.localStorage.removeItem("s2t_created");
+    window.localStorage.removeItem("s2t_access_token");
+    window.location.reload();
+  });
 
+  React.useEffect(() => {
+    const s2tCreated = parseInt(window.localStorage.getItem("s2t_created"), 10);
+    const s2tAccessToken = window.localStorage.getItem("s2t_access_token");
+
+    // 토큰 유효함
+    if (s2tCreated + 3600000 > new Date().getTime()) {
+      console.log("logined");
+      setIsLogined(true);
+    } else {
+      // 토큰 유효 시간 만료
+      window.localStorage.removeItem("s2t_created");
+      window.localStorage.removeItem("s2t_access_token");
+      setIsLogined(false);
+    }
+  }, []);
+
+  console.log("isLogined:", isLogined);
   return (
     <div className={classes.root}>
       <CssBaseline />
@@ -90,9 +114,15 @@ const HomePage = () => {
           >
             Steem2Tistory
           </Typography>
-          <Button color="inherit" onClick={login}>
-            Login
-          </Button>
+          {isLogined ? (
+            <Button color="inherit" onClick={logout}>
+              Logout
+            </Button>
+          ) : (
+            <Button color="inherit" onClick={login}>
+              Login
+            </Button>
+          )}
         </Toolbar>
       </AppBar>
       <main className={classes.content}>
