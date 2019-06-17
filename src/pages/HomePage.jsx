@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import clsx from "clsx";
 import styled from "styled-components";
 
@@ -69,10 +69,11 @@ const REDIRECT_URI = process.env.REACT_APP_REDIRECT_URI;
 const HomePage = () => {
   const classes = useStyles();
 
+  // 로그인
   const login = React.useCallback(() => {
     const url = `https://www.tistory.com/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=token`;
-    console.log(url);
-    window.open(url, "", "width=500,height=500");
+    // console.log(url);
+    window.open(url, "login_popup", "width=500,height=500");
   });
 
   return (
