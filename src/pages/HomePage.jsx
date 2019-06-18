@@ -31,7 +31,7 @@ import DirectionsIcon from "@material-ui/icons/Directions";
 import BlogList from "../components/BlogList";
 import DiscussionList from "../components/DiscussionList";
 
-import { parseMarkdown } from "../helpers/parseMarkdown";
+import parseMarkdown from "../helpers/parseMarkdown";
 
 const useStyles = makeStyles(theme => ({
   root: {
