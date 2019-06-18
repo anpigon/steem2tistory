@@ -50,7 +50,7 @@ export default function DiscussionsList({ discussions, addNewPost }) {
             >
               <ListItemText
                 primary={`${item.title}`}
-                secondary={`${item.category}·${item.created}`}
+                secondary={`${item.category} · ${item.created}`}
               />
               <ListItemSecondaryAction>
                 <IconButton

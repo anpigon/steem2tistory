@@ -31,6 +31,8 @@ import DirectionsIcon from "@material-ui/icons/Directions";
 import BlogList from "../components/BlogList";
 import DiscussionList from "../components/DiscussionList";
 
+import { parseMarkdown } from "../helpers/parseMarkdown";
+
 const useStyles = makeStyles(theme => ({
   root: {
     display: "flex"
@@ -152,19 +154,19 @@ const HomePage = () => {
   const addNewPost = async item => {
     console.log("addNewPost", item);
     const { title, body, author, permlink, json_metadata, url } = item;
-    const htmlBody = await Steemit.getHtmlBody(url);
-    console.log(htmlBody);
+    // const htmlBody = await Steemit.getHtmlBody(url);
+    // console.log(htmlBody);
 
-    // const tag = JSON.parse(json_metadata).tags.join(",");
-    // const newPost = {
-    //   blogName: "anpigon",
-    //   title,
-    //   content: body,
-    //   slogan: `${author}_${permlink}`,
-    //   tag
-    // };
-    // const result = await Tistory.addNewPost(newPost);
-    // console.log(result);
+    const tag = JSON.parse(json_metadata).tags.join(",");
+    const newPost = {
+      blogName: "anpigon",
+      title,
+      content: parseMarkdown(body),
+      slogan: `${author}_${permlink}`,
+      tag
+    };
+    const result = await Tistory.addNewPost(newPost);
+    console.log(result);
   };
 
   console.log("isLogined:", isLogined);
