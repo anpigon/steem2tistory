@@ -10,6 +10,7 @@ import Checkbox from "@material-ui/core/Checkbox";
 import IconButton from "@material-ui/core/IconButton";
 import CommentIcon from "@material-ui/icons/Comment";
 import Divider from "@material-ui/core/Divider";
+import { Publish, PublishRounded } from "@material-ui/icons";
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -19,7 +20,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-export default function DiscussionsList({ discussions }) {
+export default function DiscussionsList({ discussions, addNewPost }) {
   const classes = useStyles();
   const [checked, setChecked] = React.useState([0]);
 
@@ -51,11 +52,15 @@ export default function DiscussionsList({ discussions }) {
                 primary={`${item.title}`}
                 secondary={`${item.category}·${item.created}`}
               />
-              {/* <ListItemSecondaryAction>
-              <IconButton edge="end" aria-label="Comments">
-                <CommentIcon />
-              </IconButton>
-            </ListItemSecondaryAction> */}
+              <ListItemSecondaryAction>
+                <IconButton
+                  edge="end"
+                  aria-label="addNewPost"
+                  onClick={() => addNewPost(item)}
+                >
+                  <Publish />
+                </IconButton>
+              </ListItemSecondaryAction>
             </ListItem>
             <Divider component="li" />
           </React.Fragment>

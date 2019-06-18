@@ -1,6 +1,14 @@
 import axios from "axios";
+import request from "request";
 
 const API_URL = "https://api.steemit.com";
+
+export const getHtmlBody = url => {
+  // return axios.get(`https://steemit.com${url}`);
+  // return axios.get(`https://busy.org${url}`);
+  // return axios.get(`https://partiko.app${url}`);
+  request.get(`https://steemit.com${url}`, r => console.log(r));
+};
 
 export const getBlogs = (username, startEntryId = 0, limit = 100) => {
   const data = {

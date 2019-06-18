@@ -149,6 +149,24 @@ const HomePage = () => {
     setBusy(false);
   };
 
+  const addNewPost = async item => {
+    console.log("addNewPost", item);
+    const { title, body, author, permlink, json_metadata, url } = item;
+    const htmlBody = await Steemit.getHtmlBody(url);
+    console.log(htmlBody);
+
+    // const tag = JSON.parse(json_metadata).tags.join(",");
+    // const newPost = {
+    //   blogName: "anpigon",
+    //   title,
+    //   content: body,
+    //   slogan: `${author}_${permlink}`,
+    //   tag
+    // };
+    // const result = await Tistory.addNewPost(newPost);
+    // console.log(result);
+  };
+
   console.log("isLogined:", isLogined);
   return (
     <div className={classes.root}>
@@ -214,7 +232,10 @@ const HomePage = () => {
                 </>
                 {busy && <LinearProgress />}
                 <Paper className={classes.paper}>
-                  <DiscussionList discussions={discussions} />
+                  <DiscussionList
+                    discussions={discussions}
+                    addNewPost={addNewPost}
+                  />
                 </Paper>
               </Grid>
             </Grid>
