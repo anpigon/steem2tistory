@@ -2,6 +2,9 @@ import React, { useCallback } from "react";
 import clsx from "clsx";
 import styled from "styled-components";
 
+import * as Tistory from "../services/TistoryService";
+import * as Steemit from "../services/SteemitService";
+
 import { makeStyles } from "@material-ui/core/styles";
 import {
   CssBaseline,
@@ -11,8 +14,22 @@ import {
   Typography,
   Grid,
   Paper,
-  Button
+  Button,
+  Divider,
+  ListItemAvatar,
+  Avatar,
+  InputBase,
+  IconButton,
+  LinearProgress
 } from "@material-ui/core";
+
+import AccountCircle from "@material-ui/icons/AccountCircle";
+import MenuIcon from "@material-ui/icons/Menu";
+import SearchIcon from "@material-ui/icons/Search";
+import DirectionsIcon from "@material-ui/icons/Directions";
+
+import BlogList from "../components/BlogList";
+import DiscussionList from "../components/DiscussionList";
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -66,10 +83,23 @@ const useStyles = makeStyles(theme => ({
 const CLIENT_ID = process.env.REACT_APP_CLIENT_ID;
 const REDIRECT_URI = process.env.REACT_APP_REDIRECT_URI;
 
+const useInput = defaultValue => {
+  const [value, setValue] = React.useState(defaultValue);
+  const onChange = e => {
+    setValue(e.target.value);
+  };
+  return [value, onChange];
+};
+
 const HomePage = () => {
   const classes = useStyles();
 
+  const [busy, setBusy] = React.useState(false);
   const [isLogined, setIsLogined] = React.useState(false);
+  const [username, setUsername] = useInput("anpigon");
+  const [blogs, setBlogs] = React.useState([]);
+  const [userId, setUserId] = React.useState();
+  const [discussions, setDiscussions] = React.useState([]);
 
   // 로그인
   const login = React.useCallback(() => {
@@ -83,6 +113,13 @@ const HomePage = () => {
     window.location.reload();
   });
 
+  const loadTistoryInfos = async () => {
+    const { blogs, id, userId } = await Tistory.getBlogInfo();
+    console.log({ blogs, setUserId, userId });
+    setBlogs(blogs);
+    setUserId(id);
+  };
+
   React.useEffect(() => {
     const s2tCreated = parseInt(window.localStorage.getItem("s2t_created"), 10);
     const s2tAccessToken = window.localStorage.getItem("s2t_access_token");
@@ -91,6 +128,8 @@ const HomePage = () => {
     if (s2tCreated + 3600000 > new Date().getTime()) {
       console.log("logined");
       setIsLogined(true);
+
+      loadTistoryInfos();
     } else {
       // 토큰 유효 시간 만료
       window.localStorage.removeItem("s2t_created");
@@ -98,6 +137,17 @@ const HomePage = () => {
       setIsLogined(false);
     }
   }, []);
+
+  const getSteemitBlogs = async () => {
+    // const blogs = await Steemit.getBlogs(username);
+    setBusy(true);
+    const discussions = await Steemit.getDiscussionsByAuthorBeforeDate(
+      username
+    );
+    setDiscussions(discussions);
+    console.log(discussions);
+    setBusy(false);
+  };
 
   console.log("isLogined:", isLogined);
   return (
@@ -115,9 +165,12 @@ const HomePage = () => {
             Steem2Tistory
           </Typography>
           {isLogined ? (
-            <Button color="inherit" onClick={logout}>
-              Logout
-            </Button>
+            <>
+              {userId}
+              <Button color="inherit" onClick={logout}>
+                Logout
+              </Button>
+            </>
           ) : (
             <Button color="inherit" onClick={login}>
               Login
@@ -130,10 +183,40 @@ const HomePage = () => {
         <Container maxWidth="lg" className={classes.container}>
           <Grid container spacing={1}>
             <Grid item xs={12}>
-              <Paper className={classes.paper} />
+              <Paper className={classes.paper}>
+                <BlogList blogs={blogs} />
+              </Paper>
             </Grid>
-            <Grid item xs={12}>
-              <Paper className={classes.paper} />
+            <Grid item xs={12} spacing={1}>
+              <Grid item xs={6} />
+              <Grid item xs={6}>
+                <>
+                  <IconButton
+                    className={classes.iconButton}
+                    aria-label="Account"
+                  >
+                    <AccountCircle />
+                  </IconButton>
+                  <InputBase
+                    value={username}
+                    onChange={setUsername}
+                    className={classes.input}
+                    placeholder="username"
+                    inputProps={{ "aria-label": "username" }}
+                  />
+                  <IconButton
+                    className={classes.iconButton}
+                    aria-label="Search"
+                    onClick={getSteemitBlogs}
+                  >
+                    <SearchIcon />
+                  </IconButton>
+                </>
+                {busy && <LinearProgress />}
+                <Paper className={classes.paper}>
+                  <DiscussionList discussions={discussions} />
+                </Paper>
+              </Grid>
             </Grid>
           </Grid>
         </Container>
