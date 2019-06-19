@@ -1,6 +1,8 @@
+import _ from "lodash";
 import React, { useCallback } from "react";
 import clsx from "clsx";
 import styled from "styled-components";
+import "../App.css";
 
 import * as Tistory from "../services/TistoryService";
 import * as Steemit from "../services/SteemitService";
@@ -32,6 +34,8 @@ import BlogList from "../components/BlogList";
 import DiscussionList from "../components/DiscussionList";
 
 import parseMarkdown from "../helpers/parseMarkdown";
+
+import PostModal from "../components/PostModal";
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -98,7 +102,7 @@ const HomePage = () => {
 
   const [busy, setBusy] = React.useState(false);
   const [isLogined, setIsLogined] = React.useState(false);
-  const [username, setUsername] = useInput("anpigon");
+  const [username, setUsername] = useInput("wangpigon");
   const [blogs, setBlogs] = React.useState([]);
   const [userId, setUserId] = React.useState();
   const [discussions, setDiscussions] = React.useState([]);
@@ -115,18 +119,39 @@ const HomePage = () => {
     window.location.reload();
   });
 
+  const [blogName, setBlogName] = React.useState("anpigon");
+  const [blogPostList, setBlogPostList] = React.useState([]);
+
   const loadTistoryInfos = async () => {
+    console.log("loadTistoryInfos");
     const { blogs, id, userId } = await Tistory.getBlogInfo();
     console.log({ blogs, setUserId, userId });
     setBlogs(blogs);
     setUserId(id);
+
+    console.log("blogName:", blogName);
+    if (blogName) {
+      const allResult = [];
+      for (let page = 1; ; page++) {
+        const results = await Tistory.getPostList({ blogName, page });
+        for (const post of results.posts) {
+          allResult.push(post);
+        }
+        // console.log("results.count", results.count);
+        if (allResult.length >= results.totalCount) break;
+      }
+      console.log("allResult", allResult);
+      setBlogPostList(allResult);
+    }
   };
 
+  // componentDidMounted
   React.useEffect(() => {
+    // 티스토리 액세스 토큰 정보 가져오기
     const s2tCreated = parseInt(window.localStorage.getItem("s2t_created"), 10);
     const s2tAccessToken = window.localStorage.getItem("s2t_access_token");
 
-    // 토큰 유효함
+    // 액세스 토큰이 유효함
     if (s2tCreated + 3600000 > new Date().getTime()) {
       console.log("logined");
       setIsLogined(true);
@@ -138,35 +163,72 @@ const HomePage = () => {
       window.localStorage.removeItem("s2t_access_token");
       setIsLogined(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // 스팀잇 글 가져오기
   const getSteemitBlogs = async () => {
     // const blogs = await Steemit.getBlogs(username);
     setBusy(true);
-    const discussions = await Steemit.getDiscussionsByAuthorBeforeDate(
-      username
-    );
-    setDiscussions(discussions);
+    const discussions = await Steemit.getDiscussionsByAuthorBeforeDate(username)
+      .then(items => {
+        return items.map(item =>
+          _.pick(item, [
+            "post_id",
+            "author",
+            "body",
+            "category",
+            "created",
+            "title",
+            "json_metadata",
+            "permlink",
+            "url"
+          ])
+        );
+      })
+      .then(items => {
+        return items.map(item => {
+          const [finded] = blogPostList.filter(b => {
+            const tistoryTitle = b.title.trim().replace(/\s/g, "");
+            const steemitTitle = item.title.trim().replace(/\s/g, "");
+            if (
+              steemitTitle === tistoryTitle ||
+              steemitTitle.indexOf(tistoryTitle) !== -1
+            )
+              return true;
+            return false;
+          });
+          // const finded = _.find(blogPostList, { title: item.title.trim() });
+          console.log(`[${item.title}] finded:`, finded);
+          if (finded && finded.id) {
+            return {
+              ...item,
+              tistory: {
+                ...finded,
+                blogName
+              }
+            };
+          }
+          console.log("item:", item);
+          return item;
+        });
+      });
     console.log(discussions);
+
+    setDiscussions(discussions);
     setBusy(false);
   };
 
-  const addNewPost = async item => {
-    console.log("addNewPost", item);
-    const { title, body, author, permlink, json_metadata, url } = item;
-    // const htmlBody = await Steemit.getHtmlBody(url);
-    // console.log(htmlBody);
-
-    const tag = JSON.parse(json_metadata).tags.join(",");
-    const newPost = {
-      blogName: "anpigon",
-      title,
-      content: parseMarkdown(body),
-      slogan: `${author}_${permlink}`,
-      tag
-    };
-    const result = await Tistory.addNewPost(newPost);
-    console.log(result);
+  const [open, setOpen] = React.useState(false);
+  const [selectedValue, setSelectedValue] = React.useState({});
+  const handleClose = value => {
+    console.log("handleClose", value);
+    setOpen(false);
+  };
+  const handleClickOpen = value => {
+    console.log("handleClickOpen", value);
+    setSelectedValue(value);
+    setOpen(true);
   };
 
   console.log("isLogined:", isLogined);
@@ -236,7 +298,7 @@ const HomePage = () => {
                 <Paper className={classes.paper}>
                   <DiscussionList
                     discussions={discussions}
-                    addNewPost={addNewPost}
+                    onClickOpen={handleClickOpen}
                   />
                 </Paper>
               </Grid>
@@ -244,6 +306,11 @@ const HomePage = () => {
           </Grid>
         </Container>
       </main>
+      <PostModal
+        open={open}
+        onClose={handleClose}
+        selectedValue={selectedValue}
+      />
     </div>
   );
 };

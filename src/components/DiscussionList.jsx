@@ -10,7 +10,7 @@ import Checkbox from "@material-ui/core/Checkbox";
 import IconButton from "@material-ui/core/IconButton";
 import CommentIcon from "@material-ui/icons/Comment";
 import Divider from "@material-ui/core/Divider";
-import { Publish, PublishRounded } from "@material-ui/icons";
+import { Publish, PublishRounded, Public } from "@material-ui/icons";
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -20,7 +20,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-export default function DiscussionsList({ discussions, addNewPost }) {
+export default function DiscussionsList({ discussions, onClickOpen }) {
   const classes = useStyles();
   const [checked, setChecked] = React.useState([0]);
 
@@ -53,10 +53,11 @@ export default function DiscussionsList({ discussions, addNewPost }) {
                 secondary={`${item.category} · ${item.created}`}
               />
               <ListItemSecondaryAction>
+                {item.tistory && item.tistory.id ? "발행완료" : null}
                 <IconButton
                   edge="end"
-                  aria-label="addNewPost"
-                  onClick={() => addNewPost(item)}
+                  aria-label="publishPost"
+                  onClick={() => onClickOpen(item)}
                 >
                   <Publish />
                 </IconButton>

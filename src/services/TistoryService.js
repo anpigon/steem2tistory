@@ -24,7 +24,7 @@ export const getBlogInfo = () => {
     .catch(error => console.log(error));
 };
 
-export const getPostList = ({ blogName, page }) => {
+export const getPostList = ({ blogName, page = 1 }) => {
   const request = "/apis/post/list";
   const params = {
     output: "json",
@@ -32,32 +32,24 @@ export const getPostList = ({ blogName, page }) => {
     blogName,
     page
   };
-  return client.get(request, { params });
+  return client
+    .get(request, { params })
+    .then(r => r.data.tistory.item)
+    .catch(error => console.log(error));
 };
 
-export const addNewPost = ({
+export const publishPost = ({
+  postId,
   blogName,
   title,
   content,
   visibility = 0,
-  category = 0,
+  categoryId = 0,
   slogan,
   tag,
   acceptComment = 1
 }) => {
-  const request = "/apis/post/write";
-  const body = {
-    output: "json",
-    access_token: getAccessToken(),
-    blogName,
-    title,
-    content,
-    visibility,
-    category,
-    slogan,
-    tag,
-    acceptComment
-  };
+  const request = `/apis/post/${postId ? "modify" : "write"}`;
 
   let form = new FormData();
   form.append("output", "json");
@@ -67,7 +59,9 @@ export const addNewPost = ({
   form.append("content", content);
   form.append("slogan", slogan);
   form.append("tag", tag);
-  // console.log(qs.stringify(body));
-  // return client.post(request, qs.stringify(body));
+  form.append("visibility", visibility);
+  form.append("category", categoryId);
+  if (postId) form.append("postId", postId);
+
   return client.post(request, form);
 };
