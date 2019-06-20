@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js");
 
 importScripts(
-  "/steem2tistory/precache-manifest.017e6d77904077485410eea018b02090.js"
+  "/steem2tistory/precache-manifest.b60d7027b57c4e28fe15ea0006bd3b01.js"
 );
 
 self.addEventListener('message', (event) => {
