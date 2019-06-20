@@ -191,13 +191,16 @@ export default ({
       });
 
       const internalLink = href.indexOf("/") === 0 || appUrl === linkWebsiteUrl;
+      if (href.indexOf("/") === 0) {
+        href = appUrl + href;
+      }
 
       if (!internalLink) {
         attys.target = "_blank";
 
-        if (secureLinks && knownDomains.indexOf(linkUrl.hostname) === -1) {
-          href = `/exit?url=${encodeURIComponent(href)}`;
-        }
+        // if (secureLinks && knownDomains.indexOf(linkUrl.hostname) === -1) {
+        //   href = `/exit?url=${encodeURIComponent(href)}`;
+        // }
       }
 
       attys.href = href;

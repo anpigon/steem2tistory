@@ -10,7 +10,7 @@ import htmlReady from "./steemitHtmlReady";
 const remarkable = new Remarkable({
   html: true, // Remarkable renders first then sanitize runs...
   breaks: true,
-  linkify: false, // linkify is done locally
+  linkify: true, // linkify is done locally
   typographer: false, // https://github.com/jonschlinkert/remarkable/issues/142#issuecomment-221546793
   quotes: "“”‘’"
 });
@@ -42,13 +42,35 @@ export function getHtml(
   returnType = "Object",
   options = {}
 ) {
+  if (!body) return body;
+
   const parsedJsonMetadata = JSON.parse(jsonMetadata) || {};
   parsedJsonMetadata.image = parsedJsonMetadata.image || [];
+
+  let html = false;
+  // See also ReplyEditor isHtmlTest
+  const m = body.match(/^<html>([\S\s]*)<\/html>$/);
+  if (m && m.length === 2) {
+    html = true;
+    body = m[1];
+  } else {
+    // See also ReplyEditor isHtmlTest
+    html = /^<p>[\S\s]*<\/p>/.test(body);
+  }
 
   let parsedBody = body.replace(
     /<!--([\s\S]+?)(-->|$)/g,
     "(html comment removed: $1)"
   );
+
+  // parsedBody = html ? body : remarkable.render(body);
+
+  // if (!parsedBody.indexOf("<html>") !== 0) {
+  //   parsedBody = "<html>" + parsedBody + "</html>";
+  // }
+
+  // if (parsedBody)
+  //   parsedBody = htmlReady(parsedBody, { hideImages: false }).html;
 
   parsedBody.replace(imageRegex, img => {
     if (
@@ -56,19 +78,36 @@ export function getHtml(
       0
     ) {
       parsedJsonMetadata.image.push(img);
-      parsedBody = parsedBody.replace(
-        new RegExp(`^(${img})$`, "gm"),
-        `<img src='${img}' />`
-      );
+      // parsedBody = parsedBody.replace(
+      //   new RegExp(`^(${img})$`, "gm"),
+      //   `<img src='${img}' />`
+      // );
     }
+    // parsedBody = parsedBody.replace(img, `<img src='${img}' />`);
+    // return parsedBody.replace(
+    //   new RegExp(`^(${img})$`, "gm"),
+    //   `<img src='${img}' />`
+    // );
+    // console.log(`<img src='${img}' />`);
   });
+
+  // parsedBody = parsedBody.replace(
+  //   /[^"'(]([>\s])?((?:https?):\/\/(?:[a-zA-Z0-9][a-zA-Z0-9_-]*(?:[.][a-zA-Z0-9][a-zA-Z0-9_-]*){1,2}(?:\/[a-zA-Z0-9][^\\s]*)+)[.](?:png|jpe?g|bmp|gif))/gi,
+  //   `$1<img src="$2"/>`
+  // );
+
+  parsedBody = parsedBody.replace(
+    /[^"'(](>)?(https?:\/\/(?:[-a-zA-Z0-9._]*[-a-zA-Z0-9])(?::\d{2,5})?(?:[/?#](?:[^\s"'<>\][()]*[^\s"'<>\][().,])?(?:(?:\.(?:tiff?|jpe?g|gif|png|svg|ico)|ipfs\/[a-z\d]{40,}))))/gi,
+    `$1<img src="$2"/>`
+  );
 
   parsedBody = improve(parsedBody);
   parsedBody = remarkable.render(parsedBody);
 
   const htmlReadyOptions = {
     mutate: true,
-    resolveIframe: returnType === "text"
+    resolveIframe: returnType === "text",
+    hideImages: false
   };
   parsedBody = htmlReady(parsedBody, htmlReadyOptions).html;
   parsedBody = parsedBody.replace(dtubeImageRegex, "");
@@ -83,8 +122,11 @@ export function getHtml(
   parsedBody = sanitizeHtml(
     parsedBody,
     sanitizeConfig({
-      appUrl: options.appUrl,
-      secureLinks: options.secureLinks
+      appUrl: options.appUrl
+      // secureLinks: options.secureLinks
+      // large: true,
+      // highQualityPost: true,
+      // noImage: false
     })
   );
   if (returnType === "text") {
@@ -122,7 +164,7 @@ export function getHtml(
 // const parseMarkdown = body => remarkable.render(body);
 const options = {
   appUrl: "https://steemit.com",
-  rewriteLinks: true,
+  rewriteLinks: false,
   secureLinks: true
 };
 // const jsonMetadata = "{}";
